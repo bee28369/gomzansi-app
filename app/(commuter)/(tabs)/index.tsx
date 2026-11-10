@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MapboxView } from '../../../src/components/MapboxView';
+import { RideSearch } from '../../../src/components/RideSearch';
 import { MOCK_RANKS, MOCK_DEPARTURES, supabase } from '../../../src/lib/supabase';
 import { Rank, Departure } from '../../../src/types/database';
 
@@ -105,6 +106,9 @@ export default function CommuterRouteFinderScreen() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Destination search: nearest rides heading your way, no hailing required */}
+      <RideSearch />
 
       {/* Mapbox Vector Map Canvas */}
       <MapboxView

@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { PointsMap, MapPoint } from '../../../src/components/PointsMap';
+import { PLACES, Place, etaMins, filterHailsForDriver, roadKm } from '../../../src/lib/geo';
+import { useTargetedHails } from '../../../src/lib/liveData';
+
+const DRIVER_DESTINATIONS: Place[] = ['p-bara', 'p-sandton', 'p-alex', 'p-bosman']
+  .map((id) => PLACES.find((p) => p.id === id)!);
 import {
   StyleSheet,
   View,
@@ -15,6 +21,27 @@ export default function DriverDashboardScreen() {
   const [driverStatus, setDriverStatus] = useState<'IDLE' | 'EN_ROUTE' | 'FULL'>('IDLE');
   const [dailyPassengers, setDailyPassengers] = useState(142);
   const [activeRequest, setActiveRequest] = useState<HailRequest | null>(null);
+
+  // Driver's current position (demo: near Bree rank) and the destination they're driving to
+  const driverPos = { latitude: -26.2041, longitude: 28.0373 };
+  const [driverDest, setDriverDest] = useState<Place>(DRIVER_DESTINATIONS[0]);
+  const allHails = useTargetedHails();
+  const matchingHails = useMemo(() => filterHailsForDriver(allHails, driverDest, 5), [allHails, driverDest]);
+  const hailPoints: MapPoint[] = useMemo(
+    () => [
+      { id: 'me', ...driverPos, emoji: '🚐', label: 'You', color: '#10B981' },
+      { id: 'dest', latitude: driverDest.latitude, longitude: driverDest.longitude, emoji: '🏁', label: 'Dest', color: '#3B82F6' },
+      ...matchingHails.map((h) => ({
+        id: h.id,
+        latitude: h.pickup.latitude,
+        longitude: h.pickup.longitude,
+        emoji: '🧍',
+        label: h.commuterLabel,
+        color: '#F59E0B',
+      })),
+    ],
+    [matchingHails, driverDest],
+  );
 
   const handleSimulateCharter = () => {
     setActiveRequest({
@@ -112,6 +139,46 @@ export default function DriverDashboardScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Commuters who hailed THIS driver and are going the same way */}
+      <View style={styles.hailMapCard}>
+        <Text style={styles.dispatchHeader}>Commuters hailing you</Text>
+        <Text style={styles.detailText}>Only people who hailed you and are headed near your destination.</Text>
+
+        <View style={styles.destRow}>
+          {DRIVER_DESTINATIONS.map((d) => (
+            <TouchableOpacity
+              key={d.id}
+              style={[styles.destChip, d.id === driverDest.id && styles.destChipActive]}
+              onPress={() => setDriverDest(d)}
+            >
+              <Text style={[styles.destChipText, d.id === driverDest.id && { color: '#fff' }]}>
+                {d.name.split(' (')[0].replace(' Rank', '')}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <PointsMap points={hailPoints} height={240} />
+
+        {matchingHails.length === 0 ? (
+          <Text style={styles.emptyHails}>No one going to {driverDest.name.split(' (')[0]} has hailed you yet.</Text>
+        ) : (
+          matchingHails.map((h) => {
+            const away = roadKm(driverPos.latitude, driverPos.longitude, h.pickup.latitude, h.pickup.longitude);
+            return (
+              <View key={h.id} style={styles.hailRow}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.hailName}>🧍 {h.commuterLabel} → {h.dropoff.name.split(' (')[0]}</Text>
+                  <Text style={styles.detailText}>
+                    {away} km to pickup · ~{etaMins(away)} min · trip {h.distanceKm} km · cash guide R {h.fareGuideZar}
+                  </Text>
+                </View>
+              </View>
+            );
+          })
+        )}
+      </View>
+
       {/* Active Trip Dispatch Card */}
       <View style={styles.dispatchCard}>
         <Text style={styles.dispatchHeader}>Assigned Minibus Route</Text>
@@ -144,6 +211,22 @@ export default function DriverDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
+  hailMapCard: {
+    backgroundColor: '#131B2E',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    gap: 10,
+  },
+  destRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  destChip: { backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  destChipActive: { backgroundColor: '#10B981' },
+  destChipText: { color: '#94A3B8', fontSize: 12, fontWeight: '700' },
+  emptyHails: { color: '#64748B', fontSize: 12 },
+  hailRow: { backgroundColor: '#0F172A', borderRadius: 10, padding: 12, flexDirection: 'row' },
+  hailName: { color: '#F8FAFC', fontSize: 14, fontWeight: '700', marginBottom: 2 },
   container: {
     flex: 1,
     backgroundColor: '#090D16',
