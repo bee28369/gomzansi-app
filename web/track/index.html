@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoMzansi Live Minibus Trip Tracker</title>
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: #090D16;
+      color: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      background: #0F172A;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #1E293B;
+      z-index: 10;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-icon {
+      font-size: 24px;
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #F8FAFC;
+    }
+    .badge {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34D399;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      border: 1px solid #10B981;
+    }
+    #map {
+      flex: 1;
+      width: 100%;
+      background: #0B1120;
+    }
+    .info-panel {
+      background: #0F172A;
+      border-top: 1px solid #1E293B;
+      padding: 20px;
+      z-index: 10;
+    }
+    .trip-route {
+      font-size: 20px;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 6px;
+    }
+    .trip-meta {
+      font-size: 13px;
+      color: #94A3B8;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .stat-card {
+      background: #1E293B;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #94A3B8;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .stat-value {
+      font-size: 16px;
+      font-weight: 800;
+      color: #F8FAFC;
+      margin-top: 2px;
+    }
+    .safety-note {
+      margin-top: 12px;
+      font-size: 11px;
+      color: #64748B;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-icon">🇿🇦</span>
+      <div>
+        <div class="brand-title">GoMzansi Live Safety View</div>
+      </div>
+    </div>
+    <div class="badge">● LIVE GPS ACTIVE</div>
+  </header>
+
+  <div id="map"></div>
+
+  <div class="info-panel">
+    <div class="trip-route" id="routeText">Bree Street Rank ➔ Baragwanath Hospital Rank</div>
+    <div class="trip-meta">
+      <span>🚐 Toyota Ses'fikile (ND 452-981)</span>
+      <span>👤 Driver: Sipho Zulu (Verified PRDP)</span>
+      <span>⏱️ Est. Remaining: ~16 mins</span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Telemetry Speed</div>
+        <div class="stat-value" id="speedVal">64 km/h</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Trip Status</div>
+        <div class="stat-value" style="color: #10B981;">EN ROUTE</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Security Link</div>
+        <div class="stat-value" style="color: #60A5FA;">Exp. in 5h</div>
+      </div>
+    </div>
+
+    <div class="safety-note">
+      GoMzansi Non-Financial Safety Monitor • No passenger financial or contact info is exposed.
+    </div>
+  </div>
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+  <script>
+    // Fallback vector map rendering or Mapbox if token present
+    try {
+      mapboxgl.accessToken = 'pk.placeholder_or_user_token';
+      const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/dark-v11',
+        center: [28.00, -26.22],
+        zoom: 12
+      });
+
+      const el = document.createElement('div');
+      el.style.fontSize = '32px';
+      el.innerHTML = '🚐';
+      new mapboxgl.Marker(el)
+        .setLngLat([28.00, -26.22])
+        .addTo(map);
+    } catch (e) {
+      document.getElementById('map').innerHTML = `
+        <div style="height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#94A3B8;gap:12px;">
+          <div style="font-size:48px;">🚐</div>
+          <div style="font-weight:700;color:#F8FAFC;">Live Minibus Location: Coordinates [-26.2215, 28.0124]</div>
+          <div style="font-size:13px;">Moving along M1 South towards Baragwanath Rank, Soweto</div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
